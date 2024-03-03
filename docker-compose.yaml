@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  db:
+  template-db:
     image: postgres
     restart: always
     environment:
@@ -16,3 +16,6 @@ services:
 
 volumes:
   pg_data:
+
+networks:
+  backend:
