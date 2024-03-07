@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from utils.env_vars import get_env_var
 import os
+from system import rootDir
 
 
 class DatabaseConnection:
@@ -15,8 +16,11 @@ class DatabaseConnection:
         self._engine_ = create_engine(
             f"postgresql+psycopg2://{self.__dbUser__}:{self.__dbPassword__}@{self.__dbHost__}:{self.__dbPort__}/{self.__dbName_}")
 
-        self.schemas = [schemaName for schemaName in os.listdir("models/") if
-                        os.path.isdir(os.path.join("models/", schemaName))]
+        """
+        Transform all dirs at database/models/ in a list  
+        """
+        self.schemas = [schemaName for schemaName in os.listdir(f"{rootDir}\\database\\models\\") if
+                        os.path.isdir(os.path.join(f"{rootDir}\\database\\models\\", schemaName))]
 
         def buildSchemas():
             for schema in self.schemas:
@@ -25,7 +29,7 @@ class DatabaseConnection:
                 dbConn.commit()
                 dbConn.close()
 
-        buildSchemas()
+        buildSchemas() #Transform all itens on self.schemas in a schema at database
 
     def __enter__(self):
         self.dbConn = sessionmaker(autocommit=False, autoflush=False, bind=self._engine_, expire_on_commit=False)()
@@ -35,4 +39,7 @@ class DatabaseConnection:
         self.dbConn.close()
 
 
+"""
+This is a singleton of connection, NEVER instantiate  other 
+"""
 dbConnection = DatabaseConnection()
