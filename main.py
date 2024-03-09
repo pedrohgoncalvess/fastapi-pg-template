@@ -1,10 +1,11 @@
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query, Depends
+from fastapi import FastAPI, HTTPException, Query
 from starlette import status
 from api_models.acc_to_pay import Acc
 from api_models.entity import Entity
 from database.connection import dbConnection
 from database.models.financial.entity import Entity as EntityModel
+from database.models.financial.acc_payable import AccPayable as AccPayableModel
 
 app = FastAPI()
 
@@ -14,14 +15,35 @@ async def add_entity(entity: Entity):
     dbConn = dbConnection
     newValidEntity = EntityModel(name=entity.name, status=entity.status)
     with dbConn as cursor:
-        cursor.add(newValidEntity)
-        cursor.commit()
-    return "Ok"
+        allEntitys = cursor.query(EntityModel).all()
+        entitysName = [entity.name for entity in allEntitys]
+        if entity.name not in entitysName:
+            cursor.add(newValidEntity)
+            cursor.commit()
+            newEntity = cursor.query(EntityModel).filter(EntityModel.name == entity.name).first()
+            return {"id": newEntity.id}
+        else:
+            raise HTTPException(detail="Document already exists in database", status_code=status.HTTP_409_CONFLICT)
 
 
-@app.post("/add/acc")
+@app.post("/add/acc", status_code=status.HTTP_201_CREATED)
 async def add_acc(acc: Acc):
-    return {"message": "Hello World"}
+    dbConn = dbConnection
+    newValidAcc = AccPayableModel(id_entity=acc.id_entity, type=acc.type, cost=acc.cost)
+    with dbConn as cursor:
+        allAccs = cursor.query(AccPayableModel).all()
+        accsIds = [acc.compost_id for acc in allAccs]
+        allEntitys = cursor.query(EntityModel).all()
+        entitysId = [entity.id for entity in allEntitys]
+        newAccId = f"{acc.id_entity}-{acc.type}-{str(acc.cost).replace(',','.')}"
+        if acc.id_entity not in entitysId:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Entity not exists in database.")
+        if newAccId not in accsIds:
+            cursor.add(newValidAcc)
+            cursor.commit()
+            return "Created"
+        else:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account already exists in database.")
 
 
 async def check_list_acc_params(entity: id = Query(None), type: str = Query(None), id: int = Query(None)):
