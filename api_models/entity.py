@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Entity(BaseModel):
-    name: str
+    name: str = Field(..., max_length=50)
     status: bool
