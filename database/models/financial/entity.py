@@ -5,6 +5,9 @@ from database.models.financial.acc_payable import AccPayable #This import is nec
 
 
 class Entity(Base):
+    """
+    A model that represents the acc_payable table in the database.
+    """
     __tablename__ = 'entity'
     __table_args__ = {'schema': 'financial'}
 
