@@ -4,6 +4,9 @@ from database.models.base import Base
 
 
 class AccPayable(Base):
+    """
+    A model that represents the acc_payable table in the database
+    """
     __tablename__ = 'acc_payable'
     __table_args__ = {'schema': 'financial'}
 
