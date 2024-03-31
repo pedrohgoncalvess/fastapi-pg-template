@@ -50,7 +50,7 @@ def upgrade() -> None:
     sa.Column('status', sa.Boolean(), nullable=False, server_default=sa.text("true")),
     sa.Column("compost_id", sa.String(30), unique=True, nullable=False, server_default=sa.Computed("generate_compost_id(id_entity, type, cost)")),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id_entity'),
+    sa.UniqueConstraint('compost_id'),
     sa.ForeignKeyConstraint(['id_entity'], ['financial.entity.id']),
     schema='financial'
     )
