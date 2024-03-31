@@ -22,8 +22,8 @@ class DatabaseConnection:
         """
         Transform all dirs at database/models/ in a list  
         """
-        self.schemas = [schemaName for schemaName in os.listdir(f"{rootDir}\\database\\models\\") if
-                        os.path.isdir(os.path.join(f"{rootDir}\\database\\models\\", schemaName))]
+        self.schemas = [schemaName for schemaName in os.listdir(f"{rootDir}/database/models/") if
+                        os.path.isdir(os.path.join(f"{rootDir}/database/models/", schemaName))]
 
         def buildSchemas():
             for schema in self.schemas:
