@@ -2,4 +2,8 @@ alembic.ini
 migrations
 .env
 .venv
-requirements.txt
+readme.md
+.gitignore
+tests
+docs
+Dockerfile
