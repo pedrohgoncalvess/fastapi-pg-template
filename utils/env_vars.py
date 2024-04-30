@@ -8,5 +8,5 @@ else:
     load_dotenv(f'{rootDir}/.env.docker')
 
 
-def get_env_var(key: str):
+def get_env_var(key: str) -> str | None:
     return os.getenv(key)
