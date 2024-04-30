@@ -1,9 +1,6 @@
-alembic.ini
-migrations
 .env
 .venv
 readme.md
 .gitignore
 tests
 docs
-Dockerfile

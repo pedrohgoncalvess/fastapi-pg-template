@@ -2,15 +2,13 @@ from logging.config import fileConfig
 import os
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from dotenv import load_dotenv
+from utils.env_vars import get_env_var
 from alembic import context
 from database.models.financial.acc_payable import Base
 
-load_dotenv()
-
 config = context.config
 config.set_main_option("sqlalchemy.url",
-                       f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}")
+                       f"postgresql://{get_env_var('DB_USER')}:{get_env_var('DB_PASSWORD')}@{get_env_var('DB_HOST')}:{get_env_var('DB_PORT')}/{get_env_var('DB_NAME')}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
