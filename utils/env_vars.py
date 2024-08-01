@@ -1,6 +1,9 @@
 import os
+
 from dotenv import load_dotenv
-from system import rootDir
+
+from utils.project_dir import rootDir
+
 
 if os.path.isfile(f'{rootDir}/.env'):
     load_dotenv(f'{rootDir}/.env')
