@@ -1,8 +1,10 @@
+import os
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+
 from utils.env_vars import get_env_var
-import os
-from system import rootDir
+from utils.project_dir import rootDir
 
 
 class DatabaseConnection:
