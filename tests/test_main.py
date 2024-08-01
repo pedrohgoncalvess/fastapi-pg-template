@@ -1,9 +1,15 @@
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi.testclient import TestClient
 from main import app
 
 client = TestClient(app)
 
 
+# TODO: Separate tests per path
 # ADD ACC ROUTE
 
 def test_add_acc_success():
@@ -13,7 +19,7 @@ def test_add_acc_success():
         "cost": 97.00
     }
 
-    response = client.post("/add/acc", json=acc_data)
+    response = client.post("/acc", json=acc_data)
 
     assert response.status_code == 201
 
@@ -27,7 +33,7 @@ def test_add_acc_entity_not_exists():
         "cost": 100.00
     }
 
-    response = client.post("/add/acc", json=acc_data)
+    response = client.post("/acc", json=acc_data)
 
     assert response.status_code == 409
 
@@ -41,7 +47,7 @@ def test_list_acc_success():
         "entity": 1,
     }
 
-    response = client.get("/list/acc/", params=params)
+    response = client.get("/acc", params=params)
 
     assert response.status_code == 200
 
@@ -49,7 +55,7 @@ def test_list_acc_success():
 
 
 def test_list_acc_no_params():
-    response = client.get("/list/acc/")
+    response = client.get("/acc")
 
     assert response.status_code == 400
 
@@ -63,7 +69,7 @@ def test_list_acc_not_found():
         "id": 9999
     }
 
-    response = client.get("/list/acc/", params=params)
+    response = client.get("/acc", params=params)
 
     assert response.status_code == 404
 
