@@ -1,7 +1,8 @@
-from pydantic import BaseModel
 from enum import Enum
 
-#TODO: Make docstrings read by sphinx
+from pydantic import BaseModel
+
+
 class AccType(str, Enum):
     """
     An implementation to limit the options of the type field in the Acc model.
