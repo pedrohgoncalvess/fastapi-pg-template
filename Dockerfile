@@ -6,4 +6,4 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD alembic upgrade head && python main.py
+CMD alembic upgrade head && python main.py  # TODO: Run pytest before dockerize app.
