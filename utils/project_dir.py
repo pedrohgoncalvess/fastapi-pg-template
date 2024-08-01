@@ -1,3 +1,6 @@
 import os
 
-rootDir = os.path.dirname(os.path.abspath(__file__))
+
+currentDir = os.path.dirname(os.path.abspath(__file__))
+
+rootDir = os.path.dirname(currentDir)
