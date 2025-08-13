@@ -1,9 +1,9 @@
-FROM python:3.11
+FROM python:3.13
 
 WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.docker.txt
 
-CMD alembic upgrade head && python main.py  # TODO: Run pytest before dockerize app.
+CMD yoyo apply -b && python main.py  # TODO: Run pytest before dockerize app.
