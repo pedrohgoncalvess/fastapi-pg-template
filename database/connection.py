@@ -1,61 +1,87 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import QueuePool
+"""
+Asynchronous PostgreSQL Database Connection Module with SQLAlchemy
 
-from utils.env_vars import get_env_var
+This module provides an async connection wrapper for PostgreSQL databases using SQLAlchemy
+with asyncpg driver. It handles connection management, automatic resource cleanup, and
+supports both context manager and manual connection patterns.
+
+The module automatically configures the event loop policy for Windows compatibility
+and retrieves database credentials from environment variables.
+
+Environment Variables Required:
+    PG_HOST: PostgreSQL server hostname or IP address
+    PG_PORT: PostgreSQL server port (typically 5432)
+    PG_USER: Database username
+    PG_PASSWORD: Database user password
+    PG_NAME: Database name to connect to
+"""
+import asyncio
+import sys
+from typing import Optional
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from log import logger
+from utils import get_env_var
+
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class DatabaseConnection:
-    """
-    A class responsible for instantiating an asynchronous connection pool to the database.
-    """
-
     def __init__(self):
-        self._db_host_ = get_env_var("DB_HOST")
-        self._db_port_ = get_env_var("DB_PORT")
-        self._db_name_ = get_env_var("DB_NAME")
-        self._db_user_ = get_env_var("DB_USER")
-        self._db_password_ = get_env_var("DB_PASSWORD")
+        self._host = get_env_var("DB_HOST")
+        self._port = get_env_var("DB_PORT")
+        self._user = get_env_var("DB_USER")
+        self._password = get_env_var("DB_PASSWORD")
+        self._db_name = get_env_var("DB_NAME")
 
-        self._engine_ = create_async_engine(
-            f"postgresql+asyncpg://{self._db_user_}:{self._db_password_}@{self._db_host_}:{self._db_port_}/{self._db_name_}",
-            poolclass=QueuePool,
-            pool_size=5,
-            max_overflow=10,
-            pool_timeout=30,
-            pool_recycle=1800,
-            pool_pre_ping=True,
+        self._database_url = (
+            f"postgresql+asyncpg://{self._user}:{self._password}@"
+            f"{self._host}:{self._port}/{self._db_name}"
         )
 
-        self.async_session = sessionmaker(
-            bind=self._engine_,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autocommit=False,
-            autoflush=False
-        )
+        self._engine = None
+        self._session_maker = None
+        self._session: Optional[AsyncSession] = None
 
-    async def __aenter__(self):
-        """
-        Async context manager entry point to enable the async with clause
+    async def connect(self) -> AsyncSession:
+        try:
+            if not self._engine:
+                self._engine = create_async_engine(
+                    self._database_url,
+                    echo=False,
+                    future=True
+                )
 
-        :return: async database session
-        """
-        self.db_session = self.async_session()
-        return self.db_session
+                self._session_maker = async_sessionmaker(
+                    bind=self._engine,
+                    class_=AsyncSession,
+                    expire_on_commit=False
+                )
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """
-        Async context manager exit point that terminates the session
+            self._session = self._session_maker()
+            await logger.info("Database", "Connection", f"New session created")
+            return self._session
 
-        :param exc_type: Exception type if an exception was raised
-        :param exc_val: Exception value if an exception was raised
-        :param exc_tb: Exception traceback if an exception was raised
-        """
-        await self.db_session.close()
+        except Exception as error:
+            await logger.error("Database", f"Error while connecting: {error}")
+            raise
 
     async def close(self):
-        """
-        Close the engine and connection pool
-        """
-        await self._engine_.dispose()
+        if self._session:
+            await logger.info("Database", "Connection", "Closing session")
+            await self._session.close()
+            self._session = None
+
+        if self._engine:
+            await self._engine.dispose()
+            self._engine = None
+            self._session_maker = None
+
+    async def __aenter__(self) -> AsyncSession:
+        return await self.connect()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
