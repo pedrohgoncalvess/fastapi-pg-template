@@ -1,33 +1,36 @@
-PYTHON_VERSION = 3.13.3
+PYTHON_PATH ?= C:\Users\pedro\AppData\Local\Programs\Python\Python313\python.exe       # Optional: ex. /usr/local/bin/python3.13t
 VENV = .venv
 UV_INSTALLER = uv-installer-latest.exe
+UV_DOWNLOAD_URL = https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.exe
 
 ifeq ($(OS),Windows_NT)
-    PYTHON = python
+    RM = rmdir /s /q
+    TEST_DIR_EXISTS = if exist
+    PYTHON_DEFAULT = python
     PIP = $(VENV)\Scripts\pip
     PYTHON_VENV = $(VENV)\Scripts\python
     UV = uv.exe
     NULL_OUTPUT = >nul 2>&1
-    UV_DOWNLOAD_URL = https://uv.wtf/releases/latest/windows/$(UV_INSTALLER)
-    EXPORT_ENV = set UV_LINK_MODE=copy&&
+    WHICH = where
 else
-    PYTHON = python3
+    RM = rm -rf
+    TEST_DIR_EXISTS = test -d
+    PYTHON_DEFAULT = python3
     PIP = $(VENV)/bin/pip
     PYTHON_VENV = $(VENV)/bin/python
     UV = uv
     NULL_OUTPUT = >/dev/null 2>&1
-    UV_DOWNLOAD_URL = https://uv.wtf/releases/latest/linux/uv
-    EXPORT_ENV = UV_LINK_MODE=copy
+    WHICH = which
 endif
 
-.PHONY: setup run clean check-uv install-uv create-venv
+.PHONY: setup run clean check-uv install-uv check-python create-venv install-deps
 
 check-uv:
 	@echo Checking UV installation...
 ifeq ($(OS),Windows_NT)
-	@where $(UV) $(NULL_OUTPUT) || (echo UV not found. Installing... && $(MAKE) install-uv)
+	@$(WHICH) $(UV) $(NULL_OUTPUT) || (echo UV not found. Installing... && $(MAKE) install-uv)
 else
-	@which $(UV) $(NULL_OUTPUT) || (echo UV not found. Installing... && $(MAKE) install-uv)
+	@$(WHICH) $(UV) $(NULL_OUTPUT) || (echo UV not found. Installing... && $(MAKE) install-uv)
 endif
 
 install-uv:
@@ -38,46 +41,88 @@ ifeq ($(OS),Windows_NT)
 	@$(UV_INSTALLER) /quiet
 	@del $(UV_INSTALLER)
 else
-	@curl -Lo $(UV) $(UV_DOWNLOAD_URL)
-	@chmod +x $(UV)
-	@mv $(UV) /usr/local/bin/
+	@curl -LsSf https://astral.sh/uv/install.sh | sh
 endif
 	@echo UV successfully installed!
+
+check-python:
+	@echo Checking Python...
+ifeq ($(OS),Windows_NT)
+	@if "$(PYTHON_PATH)" NEQ "" ( \
+		if exist "$(PYTHON_PATH)" ( \
+			echo Using provided Python path: $(PYTHON_PATH) && \
+			"$(PYTHON_PATH)" --version \
+		) else ( \
+			echo ERROR: Provided PYTHON_PATH '$(PYTHON_PATH)' not found! && exit /b 1 \
+		) \
+	) else ( \
+		$(WHICH) python $(NULL_OUTPUT) && (python --version) || (echo Python not found in PATH) \
+	)
+else
+	@if [ -n "$(PYTHON_PATH)" ]; then \
+		if [ -x "$(PYTHON_PATH)" ]; then \
+			echo "Using provided Python path: $(PYTHON_PATH)"; \
+			"$(PYTHON_PATH)" --version; \
+		else \
+			echo "ERROR: Provided PYTHON_PATH '$(PYTHON_PATH)' not found or not executable."; \
+			exit 1; \
+		fi \
+	else \
+		$(WHICH) $(PYTHON_DEFAULT) $(NULL_OUTPUT) && $(PYTHON_DEFAULT) --version || echo "Python not found in PATH"; \
+	fi
+endif
 
 create-venv: check-uv
 	@echo Checking if virtual environment exists...
 ifeq ($(OS),Windows_NT)
-	@if exist $(VENV) ( \
-		echo Virtual environment already exists. Recreating... && \
-		rmdir /s /q $(VENV) \
+	@if exist $(VENV) $(RM) $(VENV)
+	@echo Creating virtual environment...
+	@if "$(PYTHON_PATH)" NEQ "" ( \
+		if exist "$(PYTHON_PATH)" ( \
+			echo Using provided Python path: $(PYTHON_PATH) && \
+			$(UV) venv $(VENV) --python "$(PYTHON_PATH)" --link-mode=copy \
+		) else ( \
+			echo ERROR: PYTHON_PATH '$(PYTHON_PATH)' not found! && exit /b 1 \
+		) \
+	) else ( \
+		echo Creating virtual environment using project configuration... && \
+		$(UV) venv $(VENV) --link-mode=copy \
 	)
 else
-	@if [ -d $(VENV) ]; then \
-		echo Virtual environment already exists. Recreating... && \
-		rm -rf $(VENV); \
+	@if [ -d $(VENV) ]; then $(RM) $(VENV); fi
+	@echo Creating virtual environment...
+	@if [ -n "$(PYTHON_PATH)" ]; then \
+		if [ -x "$(PYTHON_PATH)" ]; then \
+			echo "Using provided Python path: $(PYTHON_PATH)"; \
+			$(UV) venv $(VENV) --python "$(PYTHON_PATH)" --link-mode=copy; \
+		else \
+			echo "ERROR: PYTHON_PATH '$(PYTHON_PATH)' not found or not executable."; \
+			exit 1; \
+		fi \
+	else \
+		echo "Creating virtual environment using project configuration..."; \
+		$(UV) venv $(VENV) --link-mode=copy; \
 	fi
 endif
-	@echo Creating new virtual environment with UV...
-	@$(UV) venv $(VENV) --python $(PYTHON_VERSION) --link-mode=copy
-	@echo Virtual environment successfully created!
+	@echo Virtual environment created!
 
 install-deps: create-venv
-	@echo Checking for requirements.txt...
+	@echo Installing dependencies...
 ifeq ($(OS),Windows_NT)
 	@if exist requirements.txt ( \
-		echo Installing dependencies from requirements.txt... && \
 		$(UV) pip install -r requirements.txt --link-mode=copy \
-	) else ( \
-		echo No requirements.txt found. Using UV sync... && \
+	) else if exist pyproject.toml ( \
 		$(UV) sync --link-mode=copy \
+	) else ( \
+		echo No requirements.txt or pyproject.toml found. Skipping dependency installation. \
 	)
 else
 	@if [ -f requirements.txt ]; then \
-		echo Installing dependencies from requirements.txt... && \
-		$(EXPORT_ENV) $(UV) pip install -r requirements.txt; \
+		$(UV) pip install -r requirements.txt --link-mode=copy; \
+	elif [ -f pyproject.toml ]; then \
+		$(UV) sync --link-mode=copy; \
 	else \
-		echo No requirements.txt found. Using UV sync... && \
-		$(EXPORT_ENV) $(UV) sync --link-mode=copy; \
+		echo "No requirements.txt or pyproject.toml found. Skipping dependency installation."; \
 	fi
 endif
 	@echo Dependencies installed successfully!
@@ -85,7 +130,7 @@ endif
 setup: install-deps
 	@echo Setup completed!
 
-run: setup
+run:
 	@$(PYTHON_VENV) main.py
 
 clean:
@@ -94,3 +139,4 @@ ifeq ($(OS),Windows_NT)
 else
 	@rm -rf $(VENV)
 endif
+	@echo Virtual environment removed!
