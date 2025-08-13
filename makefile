@@ -1,4 +1,4 @@
-PYTHON_PATH ?= C:\Users\pedro\AppData\Local\Programs\Python\Python313\python.exe       # Optional: ex. /usr/local/bin/python3.13t
+PYTHON_PATH ?=  # Optional: ex. /usr/local/bin/python3.13t
 VENV = .venv
 UV_INSTALLER = uv-installer-latest.exe
 UV_DOWNLOAD_URL = https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.exe
