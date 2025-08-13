@@ -11,7 +11,7 @@ class Entity(Base):
     __tablename__ = 'entity'
     __table_args__ = {'schema': 'financial'}
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), unique=True, nullable=False)
     created_at = Column(DateTime, nullable=False, default=func.now())
     status = Column(Boolean, nullable=False, default=True)

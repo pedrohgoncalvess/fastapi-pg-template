@@ -10,9 +10,9 @@ class AccPayable(Base):
     __tablename__ = 'acc_payable'
     __table_args__ = {'schema': 'financial'}
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     id_entity = Column(Integer, ForeignKey('financial.entity.id'), unique=True, nullable=False)
-    type = Column(String(10), nullable=False)
+    type = Column(String(30), nullable=False)
     cost = Column(Numeric, nullable=False)
     created_at = Column(DateTime, nullable=False, default=func.now())
     status = Column(Boolean, nullable=False, default=False)
