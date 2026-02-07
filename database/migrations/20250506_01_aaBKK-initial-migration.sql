@@ -1,22 +1,23 @@
 -- initial migration
 -- depends: 
 
-CREATE SCHEMA IF NOT EXISTS financial;
+CREATE SCHEMA IF NOT EXISTS base;
 
-CREATE TABLE financial.entity (
+CREATE TABLE "base"."user" (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    status BOOLEAN NOT NULL
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    inserted_at TIMESTAMP NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMP
 );
 
-CREATE TABLE financial.acc_payable (
+CREATE TABLE "base"."refresh" (
     id SERIAL PRIMARY KEY,
-    id_entity INTEGER NOT NULL,
-    type VARCHAR(30) NOT NULL,
-    cost DECIMAL(11,3) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    status BOOLEAN NOT NULL DEFAULT true,
-    compost_id VARCHAR(30) UNIQUE GENERATED ALWAYS AS (id_entity::varchar || '-' || "type" || '-' || cost::varchar) STORED,
-    FOREIGN KEY (id_entity) REFERENCES financial.entity(id)
+    user_id INTEGER NOT NULL,
+    token UUID NOT NULL UNIQUE,
+    used BOOLEAN DEFAULT FALSE,
+    inserted_at TIMESTAMP NOT NULL
 );

@@ -9,11 +9,11 @@ The module automatically configures the event loop policy for Windows compatibil
 and retrieves database credentials from environment variables.
 
 Environment Variables Required:
-    PG_HOST: PostgreSQL server hostname or IP address
-    PG_PORT: PostgreSQL server port (typically 5432)
-    PG_USER: Database username
-    PG_PASSWORD: Database user password
-    PG_NAME: Database name to connect to
+    DB_HOST: PostgreSQL server hostname or IP address
+    DB_PORT: PostgreSQL server port (typically 5432)
+    DB_USER: Database username
+    DB_PASSWORD: Database user password
+    DB_NAME: Database name to connect to
 """
 import asyncio
 import sys
