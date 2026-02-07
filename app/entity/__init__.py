@@ -1,1 +1,0 @@
-from app.entity.models.entity import Entity as EntityJson
