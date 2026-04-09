@@ -7,7 +7,7 @@ from starlette import status
 from app.auth.models import UserLogin, RefreshTokenRequest
 from app.auth.services import verify_password, create_access_token
 from database.connection import DatabaseConnection
-from database.models.base import User, Refresh
+from database.models.base import Refresh
 from database.operations.base import RefreshRepository
 from database.operations.base.user import UserRepository
 
@@ -68,7 +68,7 @@ async def login(user_auth: UserLogin):
 async def refresh_token(payload: RefreshTokenRequest):
     async with DatabaseConnection() as conn:
         refresh_repository = RefreshRepository(conn)
-        user_repository = UserRepository(User, conn)
+        user_repository = UserRepository(conn)
 
         refresh = await refresh_repository.find_by_token(payload.refresh_token)
 
@@ -86,8 +86,8 @@ async def refresh_token(payload: RefreshTokenRequest):
                 detail="Refresh token expired.",
             )
 
-        refresh.used = True
-        await refresh_repository.update(refresh)
+        upt_data = {"used": True}
+        await refresh_repository.update(refresh.id, upt_data)
 
         new_refresh_token = str(uuid.uuid4())
 
