@@ -11,7 +11,7 @@ async def test_successful_connection():
 
     async with conn as session:
         assert session is not None
-        assert session.bind is not None  # engine está presente
+        assert session.bind is not None
 
         result = await session.execute(text("SELECT 1"))
         value = result.scalar()
