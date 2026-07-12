@@ -1,5 +1,6 @@
 .idea
 .vscode
+.agents
 
 *.md
 
@@ -14,6 +15,4 @@ yoyo.example.ini
 tests
 
 .venv
-uv.lock
 readme.md
-pyproject.toml
