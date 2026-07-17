@@ -7,9 +7,7 @@ from database import DatabaseConnection
 @pytest.mark.asyncio
 async def test_successful_connection():
     """Test connection with database and execute SELECT 1."""
-    conn = DatabaseConnection()
-
-    async with conn as session:
+    async with DatabaseConnection().session() as session:
         assert session is not None
         assert session.bind is not None
 

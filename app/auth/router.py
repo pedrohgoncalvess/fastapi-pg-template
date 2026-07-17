@@ -21,9 +21,9 @@ REFRESH_TOKEN_EXPIRE_MINUTES = 300
 
 @router.post("")
 async def login(user_auth: UserLogin):
-    async with DatabaseConnection() as conn:
-        user_repository = UserRepository(conn)
-        refresh_repository = RefreshRepository(conn)
+    async with DatabaseConnection().session() as session:
+        user_repository = UserRepository(session)
+        refresh_repository = RefreshRepository(session)
 
         user = await user_repository.find_by_email(user_auth.email)
 
@@ -66,9 +66,9 @@ async def login(user_auth: UserLogin):
 
 @router.post("/refresh")
 async def refresh_token(payload: RefreshTokenRequest):
-    async with DatabaseConnection() as conn:
-        refresh_repository = RefreshRepository(conn)
-        user_repository = UserRepository(conn)
+    async with DatabaseConnection().session() as session:
+        refresh_repository = RefreshRepository(session)
+        user_repository = UserRepository(session)
 
         refresh = await refresh_repository.find_by_token(payload.refresh_token)
 

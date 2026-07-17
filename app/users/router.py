@@ -15,9 +15,9 @@ router = APIRouter(
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user: UserCreate):
-    async with DatabaseConnection() as conn:
+    async with DatabaseConnection().session() as session:
 
-        user_repository = UserRepository(conn)
+        user_repository = UserRepository(session)
         exists = await user_repository.find_by_email(user.email)
         if exists:
             raise HTTPException(

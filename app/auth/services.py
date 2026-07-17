@@ -38,8 +38,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    async with DatabaseConnection() as conn:
-        user_repository = UserRepository(conn)
+    async with DatabaseConnection().session() as session:
+        user_repository = UserRepository(session)
 
         try:
             token = credentials.credentials
