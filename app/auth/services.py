@@ -126,7 +126,7 @@ async def refresh_access_token(payload: RefreshTokenRequest) -> dict:
 
         user = await user_repository.find_by_id(refresh.user_id)
 
-        if refresh.inserted_at + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES) < datetime.utcnow() or not refresh.used:
+        if refresh.inserted_at + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES) < datetime.utcnow() or refresh.used:
             raise RefreshTokenExpired()
 
         await refresh_repository.update(refresh.id, {"used": True})
