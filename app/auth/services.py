@@ -22,7 +22,7 @@ from utils import get_env_var
 
 SECRET_KEY = get_env_var("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 90
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_MINUTES = 300
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
@@ -140,3 +140,11 @@ async def refresh_access_token(payload: RefreshTokenRequest) -> dict:
         )
 
         return _token_response(_create_access_token_for(user), new_refresh_token)
+
+
+async def logout_user(payload: RefreshTokenRequest) -> None:
+    async with DatabaseConnection().session() as session:
+        refresh_repository = RefreshRepository(session)
+
+        if not await refresh_repository.delete_by_token(payload.refresh_token):
+            raise InvalidRefreshToken()

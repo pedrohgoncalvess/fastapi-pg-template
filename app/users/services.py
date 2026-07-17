@@ -10,6 +10,7 @@ from app.exceptions import (
 )
 from database.connection import DatabaseConnection
 from database.models.base import User
+from database.operations.base import RefreshRepository
 from database.operations.base.user import UserRepository
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -59,4 +60,10 @@ async def update_user_info(user: User, payload: UserUpdate) -> User:
         if not update_data:
             raise NothingToUpdate()
 
-        return await user_repository.update(user.id, update_data)
+        updated_user = await user_repository.update(user.id, update_data)
+
+        if "password" in update_data:
+            refresh_repository = RefreshRepository(session)
+            await refresh_repository.delete_by_user_id(user.id)
+
+        return updated_user
