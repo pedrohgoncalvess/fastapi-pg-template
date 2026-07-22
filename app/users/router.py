@@ -1,8 +1,8 @@
 from fastapi import Depends, APIRouter
 from starlette import status
 
-from app.auth.models import UserCreate, UserUpdate
 from app.auth.services import get_current_user
+from app.users.models import UserCreate, UserUpdate
 from app.users.services import register_user, update_user_info
 from database.models.base import User
 
